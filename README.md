@@ -10,7 +10,7 @@ MahaSaathi is an intelligent assistant for Pune Ganeshotsav that combines RAG (R
 - **Language-Aware**: Responds in the same language as the query (Marathi/Hindi/English)
 - **No Hallucinations**: Only uses verified context or real-time data
 - **RFID Integration**: Tracks user location and crowd density across festival zones
-- **Ollama** with `phi3:mini` model:
+- **Ollama** with `gemma2:9b` model:
    ```bash
    # Install Ollama from https://ollama.ai
    ollama pull gemma2:9b

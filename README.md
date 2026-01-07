@@ -13,7 +13,7 @@ MahaSaathi is an intelligent assistant for Pune Ganeshotsav that combines RAG (R
 - **Ollama** with `phi3:mini` model:
    ```bash
    # Install Ollama from https://ollama.ai
-   ollama pull phi3:mini
+   ollama pull gemma2:9b
    ```
 
 ## Installation
@@ -34,7 +34,7 @@ pip install -r requirements.txt
 
 ### 2. Configure Environment Variables
 
-The `.env` file is already configured. Verify the settings:
+Create a `.env` file in the `backend/` directory. You can use the following template:
 
 ```bash
 POSTGRES_HOST=localhost
@@ -48,7 +48,7 @@ OLLAMA_URL=http://localhost:11434
 
 ### 3. Verify Database
 
-Your database is already set up with 100 locations. Let's verify the connection and optionally add test users:
+Your database is already set up with 100 locations. Let's verify the connection:
 
 ```bash
 # Verify database structure and data
@@ -56,108 +56,43 @@ cd database
 python verify_db.py
 ```
 
-**Expected Output:**
-```
-============================================================
-MahaSaathi Database Verification
-============================================================
-🔌 Connecting to database...
-✅ Database connection successful!
-...
-✅ Database verification complete!
-============================================================
-```
-
 ### 4. Build RAG Vector Database
+
+To enable the chatbot to answer questions about the festival, build the knowledge base:
 
 ```bash
 cd ../chatbot
 python rag_ingest.py
 ```
 
-**Expected Output:**
-```
-[RAG] Ingested 6 chunks from 01_dagdusheth.md
-...
-✅ RAG ingestion done.
-```
-
 ## Usage
 
 ### CLI Testing
 
+You can test the chatbot directly in your terminal:
+
 ```bash
 cd chatbot
-python main_cli.py --ingest  # Rebuild RAG DB first (optional)
+python main_cli.py
 ```
 
 **Sample Session:**
 ```
-======================================================================
-  MahaSaathi Assistant (CLI Test)
-======================================================================
-...
 🧑 You: Where is the nearest washroom?
 🤖 MahaSaathi: The nearest washroom is at Dagdusheth Area, approximately 150 meters away.
 ```
 
-### Sample Queries
+### FastAPI Server
 
-#### RAG Mode (Factual Questions)
-- "When is the aarti at Dagdusheth?"
-- "What is the history of Kasba Ganpati?"
-- "Tell me about parking facilities"
-
-#### Intent Mode (Real-time Queries)
-
-**findNearest:**
-- "Where is the nearest washroom?"
-- "Nearest metro station?"
-
-**getDirections:**
-- "How to get to Shaniwarwada?"
-
-**checkCrowd:**
-- "Is it crowded right now?"
-
-**showSecurity:**
-- "Where is the police booth?"
-
-#### Language Testing
-- Marathi: "जवळचे शौचालय कुठे आहे?"
-- Hindi: "निकटतम शौचालय कहाँ है?"
-- English: "Where is the nearest washroom?"
-
-## FastAPI Server
-
-### Start Server
+To run the backend API server:
 
 ```bash
 cd backend
 uvicorn app:app --reload --host 0.0.0.0 --port 8000
 ```
 
-### API Endpoints
-
-#### Health Check
-```bash
-curl http://localhost:8000/health
-```
-
-#### Chat Endpoint
-```bash
-curl -X POST http://localhost:8000/chat \
-  -H "Content-Type: application/json" \
-  -d '{
-    "user_uid": "test_user_001",
-    "query": "Where is the nearest washroom?"
-  }'
-```
-
-### API Documentation
-
-- Swagger UI: http://localhost:8000/docs
-- ReDoc: http://localhost:8000/redoc
+- **Swagger UI**: http://localhost:8000/docs
+- **ReDoc**: http://localhost:8000/redoc
 
 ## Project Structure
 
@@ -172,60 +107,15 @@ Mahasaathi/
 │   ├── database/          # Database scripts & schema
 │   ├── rag_docs/          # Knowledge base documents
 │   └── chroma_db/         # ChromaDB persistent storage
-└── ...
 ```
 
 ## Intents & Algorithms
 
-### 1. findNearest(category)
-- Queries `locations` table by category
-- Computes distance using Haversine formula
-- Returns nearest location name and distance in meters
-
-### 2. getDirections(target)
-- Uses RAG to find context about target location
-- LLM rewrites context into step-by-step directions
-
-### 3. checkCrowd()
-- Counts RFID scans in last 5 minutes per zone
-- Thresholds: ≤10 LOW, 11-30 MEDIUM, >30 HIGH
-
-### 4. showSecurity()
-- Queries `locations` table for category='security'
-
-## Database Schema
-
-- **locations**: Pandals, washrooms, food, commutation, medical, security
-- **rfid_readers**: 6 readers across 3 zones (Entry, Inner Temple, Exit)
-- **rfid_activity**: RFID scan logs with timestamps
-- **users**: User tracking with last seen zone/reader
-
-## Troubleshooting
-
-### Database Connection Error
-**Solution:** Verify `.env` file exists and `PG_DSN` is correctly set.
-
-### Ollama Not Running
-**Solution:** Start Ollama service and ensure `phi3:mini` model is installed.
-
-### ChromaDB Collection Not Found
-**Solution:** Run RAG ingestion.
-
-## Future Enhancements
-
-- [ ] User GPS integration for accurate distance calculation
-- [ ] Real-time map routing with OSRM/Google Maps
-- [ ] Chat history logging to database
-- [ ] User profile personalization
+1. **findNearest(category)**: Queries database using Haversine distance.
+2. **getDirections(target)**: Uses RAG to find navigation/walking route context.
+3. **checkCrowd()**: Analyzes recent RFID scans to determine crowd density.
+4. **showSecurity()**: Locates nearest police/security booths.
 
 ## License
 
 This project is developed for educational purposes as part of the EDAI_V course.
-
-## Support
-
-For issues or questions, please contact the development team.
-
----
-
-**MahaSaathi** - Making Pune Ganeshotsav accessible and enjoyable for everyone! 🙏
